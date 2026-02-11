@@ -364,7 +364,7 @@ setsockopt(syscall) -> __sys_setsockopt -> do_sock_setsockopt -> sock_setsockopt
     那么这个tpacket_rcv会在哪里被调用呢？答案在 dev_add_pack, 对于 AF_PACKET/PF_PACKET，会在这种类型下注册一下这个packet_type
 
     由此当 __netif_receive_skb_core 收到包时，首先进行 do_xdp_generic(通用xdp抓包点，也就是软件模拟的xdp), 
-    然后就到了所谓的tc点，也就是这种dev的packet type 进行 deliver_skb
+    也就是这种dev的packet type 进行 deliver_skb
     ```c
     list_for_each_entry_rcu(ptype, &dev_net_rcu(skb->dev)->ptype_all,
 				list) {
@@ -372,6 +372,8 @@ setsockopt(syscall) -> __sys_setsockopt -> do_sock_setsockopt -> sock_setsockopt
 			ret = deliver_skb(skb, pt_prev, orig_dev);
 		pt_prev = ptype;
 	}
+
+    /// 这后面是 tc 点，所以也就是说 tcpdump 的挂载点是在 tc点之前的。
 
     static inline int deliver_skb(struct sk_buff *skb,
 			      struct packet_type *pt_prev,
